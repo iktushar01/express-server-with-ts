@@ -13,7 +13,7 @@ const loginUser = async ( email: string, password: string ) => {
     if (!match) {
         return false;
     }
-    const token = jwt.sign({ name: user.name , email: user.email }, process.env.JWT_SECRET as string, { 
+    const token = jwt.sign({ name: user.name , email: user.email, role: user.role }, process.env.JWT_SECRET as string, { 
         expiresIn: "1h"
     });
     console.log(token)
