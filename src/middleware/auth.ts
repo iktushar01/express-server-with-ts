@@ -1,26 +1,36 @@
 // higher order function return a function
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 
 const auth = () =>{
     return (req: Request, res: Response, next: NextFunction) => {
-        const token = req.headers.authorization;
+        const authHeader = req.headers.authorization;
+        
+        if(!authHeader){
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized - No token provided",
+            });
+        }
+
+        // Extract token from "Bearer <token>" format
+        const token = authHeader.startsWith('Bearer ') 
+            ? authHeader.slice(7) 
+            : authHeader;
+
         if(!token){
             return res.status(401).json({
                 success: false,
-                message: "Unauthorized",
-                debug: {
-                    token: token,
-                    headers: req.headers,
-                }
+                message: "Unauthorized - Invalid token format",
             });
         }
 
         try {
             const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
             // Attach decoded token to request for use in routes
+
             (req as any).user = decoded;
-            console.log({AuthToken : token});
+            req.user = decoded as JwtPayload;
             next();
         } catch (error) {
             return res.status(401).json({
@@ -28,6 +38,7 @@ const auth = () =>{
                 message: "Invalid or expired token",
             });
         }
+
     }
 }
 
